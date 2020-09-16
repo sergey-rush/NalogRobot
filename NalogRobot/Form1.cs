@@ -16,6 +16,8 @@ namespace NalogRobot
 {
     public partial class Form1 : Form
     {
+        
+
         private const int MOUSEEVENTF_ABSOLUTE = 0x8000;
         //Нажатие на левую кнопку мыши
         private const int MOUSEEVENTF_LEFTDOWN = 0x0002;
