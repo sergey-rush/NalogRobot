@@ -55,11 +55,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Form1.cs">
+    <Compile Include="Settings.cs" />
+    <Compile Include="DirectoryWatcher.cs" />
+    <Compile Include="Stat.cs" />
+    <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="GlobalHookHotKey.cs" />
     <Compile Include="OptionsForm.cs">
@@ -70,8 +73,17 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="Config.cs" />
+    <Compile Include="Win32Wrapper.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <None Include="NalogRobot.ini">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\AppIcon.ico" />
+    <None Include="Resources\Icon1.ico" />
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="OptionsForm.resx">
       <DependentUpon>OptionsForm.cs</DependentUpon>
