@@ -11,7 +11,7 @@ namespace NalogRobot
         private static Logger logger = LogManager.GetCurrentClassLogger();
         private static string targetDirectory;
         public static bool IsRunning = false;
-        public static bool IsBroke = false;
+        public static bool BreakLoop = false;
         private static List<FileInfo> movedFiles = new List<FileInfo>();
 
         public static void StartWatching(string path, string targetDir)

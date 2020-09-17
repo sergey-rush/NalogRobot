@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -51,7 +52,7 @@ namespace NalogRobot
 
         private void Run(object sender, EventArgs e)
         {
-            logger.Info("Run called");
+            logger.Info("Run method called");
 
             Thread thread = new Thread(delegate()
             {
@@ -66,7 +67,7 @@ namespace NalogRobot
                     return;
                 }
 
-                DirectoryWatcher.IsBroke = false;
+                DirectoryWatcher.BreakLoop = false;
                 DirectoryWatcher.IsRunning = true;
                 logger.Info("Waiting 3 sec");
                 Thread.Sleep(3000);
@@ -95,14 +96,19 @@ namespace NalogRobot
                 DirectoryWatcher.IsRunning = true;
                 int index = 0;
 
-                logger.Info("Enter main loop: {0} index {1} count {2}", DirectoryWatcher.IsRunning, index, config.Count);
-
                 while (DirectoryWatcher.IsRunning && index < config.Count)
                 {
+                    logger.Info("Begin loop: {0} of {2}", index, config.Count);
+
+                    if (IsProcessStopped())
+                    {
+                        break;
+                    }
+                    
                     logger.Info("Waiting 0.5 sec");
                     Thread.Sleep(500);
 
-                    if (DirectoryWatcher.IsBroke)
+                    if (DirectoryWatcher.BreakLoop)
                     {
                         break;
                     }
@@ -112,55 +118,58 @@ namespace NalogRobot
                     logger.Info("Mouse is about to move to Preview point {0} x {1}", config.Preview.X, config.Preview.Y);
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, config.Preview.X, config.Preview.Y, 0, 0);
 
-                    logger.Info("Mouse is about to click left button");
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, config.Preview.X, config.Preview.Y, 0, 0);
                     Thread.Sleep(150);
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, config.Preview.X, config.Preview.Y, 0, 0);
 
-
                     DirectoryWatcher.IsRunning = true;
-                    logger.Info("Waiting 10 sec");
+                    
                     Thread.Sleep(10000);
-                    if (DirectoryWatcher.IsBroke)
+                    if (DirectoryWatcher.BreakLoop)
                         break;
 
                     DirectoryWatcher.IsRunning = false;
 
                     logger.Info("Mouse is about to move to Export point {0} x {1}", config.Export.X, config.Export.Y);
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, config.Export.X, config.Export.Y, 0, 0);
-                    
-                    
-                    logger.Info("Mouse is about to click left button");
+
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, config.Export.X, config.Export.Y, 0, 0);
                     Thread.Sleep(150);
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, config.Export.X, config.Export.Y, 0, 0);
 
                     DirectoryWatcher.IsRunning = true;
-                    logger.Info("Waiting 2 sec");
+                    
                     Thread.Sleep(2000);
 
-                    if (DirectoryWatcher.IsBroke)
-                        break;
-                    DirectoryWatcher.IsRunning = false;
-
-                    SendKeys.SendWait("{ENTER}");
-
-                    DirectoryWatcher.IsRunning = true;
-                    logger.Info("Waiting 6 sec");
-                    Thread.Sleep(6000);
-                    if (DirectoryWatcher.IsBroke)
+                    if (DirectoryWatcher.BreakLoop)
                     {
                         break;
                     }
 
                     DirectoryWatcher.IsRunning = false;
+
+                    SendKeys.SendWait("{ENTER}");
+                    logger.Info("Key ENTER sent");
+
+                    DirectoryWatcher.IsRunning = true;
+                    
+                    Thread.Sleep(6000);
+
+                    if (DirectoryWatcher.BreakLoop)
+                    {
+                        break;
+                    }
+
+                    DirectoryWatcher.IsRunning = false;
+
                     SendKeys.SendWait("(%{F4})");
+                    logger.Info("Key F4 sent");
+
                     DirectoryWatcher.IsRunning = true;
 
-                    logger.Info("Waiting 1 sec");
                     Thread.Sleep(1000);
                     
-                    if (DirectoryWatcher.IsBroke)
+                    if (DirectoryWatcher.BreakLoop)
                     {
                         break;
                     }
@@ -169,21 +178,25 @@ namespace NalogRobot
 
                     logger.Info("Mouse is about to move to Close point {0} x {1}", config.Close.X, config.Close.Y);
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, config.Close.X, config.Close.Y, 0, 0);
-                    
-                    logger.Info("Mouse is about to click left button");
+
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTDOWN, config.Close.X, config.Close.Y, 0, 0);
                     Thread.Sleep(150);
                     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, config.Close.X, config.Close.Y, 0, 0);
 
                     DirectoryWatcher.IsRunning = true;
-                    logger.Info("Waiting 1.5 sec");
+
                     Thread.Sleep(1500);
-                    if (DirectoryWatcher.IsBroke)
+
+                    if (DirectoryWatcher.BreakLoop)
                     {
                         break;
                     }
+
                     DirectoryWatcher.IsRunning = false;
+
                     SendKeys.SendWait("{DOWN}");
+                    logger.Info("Key ARROW DOWN sent");
+
                     DirectoryWatcher.IsRunning = true;
                     index++;
                 }
@@ -193,6 +206,7 @@ namespace NalogRobot
                 DirectoryWatcher.MoveFiles();
                 DirectoryWatcher.IsRunning = false;
                 string info = $"Обработано {index} циклов, обработано {DirectoryWatcher.fileMovedCount} деклараций.";
+                logger.Info(info);
                 Stat.SaveSummary(info);
                 MessageBox.Show(info);
             });
@@ -212,6 +226,21 @@ namespace NalogRobot
         private void Exit(object sender, EventArgs e)
         {
             Close();
+        }
+
+        public static bool IsProcessStopped()
+        {
+            Process[] pname = Process.GetProcessesByName("CSC.Hosting.UcHost");
+            if (pname.Length == 0)
+            {
+                logger.Info("CSC.Hosting.UcHost does not exist");
+                return true;
+            }
+            else
+            {
+                logger.Info("CSC.Hosting.UcHost is running");
+                return false;
+            }
         }
     }
 }

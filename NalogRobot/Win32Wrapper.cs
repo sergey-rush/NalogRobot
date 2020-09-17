@@ -125,28 +125,23 @@ namespace NalogRobot
 
         private static IntPtr HookCallbackKeyboard(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            //Thread.Sleep(1000);
             if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN && DirectoryWatcher.IsRunning)
             {
                 int vkCode = Marshal.ReadInt32(lParam);
-                //MessageBox.Show(vkCode.ToString());
 
                 Keys keys = (Keys)vkCode;
+
                 if (keys == Keys.LShiftKey)
+                {
                     LshiftTime = Environment.TickCount;
+                }
                 else if (keys == Keys.D && Environment.TickCount - LshiftTime < 500)
                 {
-                    DirectoryWatcher.IsBroke = true;
-
+                    DirectoryWatcher.BreakLoop = true;
                 }
 
-                //Console.WriteLine((Keys)vkCode + " " + nCode);
                 return (System.IntPtr)1;
             }
-            /*else if (nCode >= 0 && (wParam == (IntPtr)WM_MBUTTONDOWN || wParam == (IntPtr)WM_MOUSEMOVE) && Watcher.running)
-            {
-                return (System.IntPtr)1;
-            }*/
 
             return CallNextHookEx(_hookIDKeyboard, nCode, wParam, lParam);
         }
