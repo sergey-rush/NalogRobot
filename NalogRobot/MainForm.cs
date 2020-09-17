@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using System.IO;
+using System.Windows.Automation;
 using NLog;
 
 namespace NalogRobot
@@ -100,11 +101,13 @@ namespace NalogRobot
                 {
                     logger.Info("Begin loop: {0} of {2}", index, config.Count);
 
-                    if (IsProcessStopped())
-                    {
-                        break;
-                    }
-                    
+                    //if (IsProcessStopped())
+                    //{
+                    //    break;
+                    //}
+
+                    Tax tax = new Tax();
+
                     logger.Info("Waiting 0.5 sec");
                     Thread.Sleep(500);
 
@@ -125,6 +128,46 @@ namespace NalogRobot
                     DirectoryWatcher.IsRunning = true;
                     
                     Thread.Sleep(10000);
+
+                    DirectoryWatcher.IsRunning = false;
+
+                    SendKeys.SendWait("{DOWN}");
+                    logger.Info("Table: Key ARROW DOWN sent");
+
+                    DirectoryWatcher.IsRunning = true;
+
+                    Thread.Sleep(2000);
+
+                    var element = AutomationElement.FocusedElement;
+                    if (element != null)
+                    {
+                        logger.Info("Element is not null");
+
+                        object pattern;
+                        if (element.TryGetCurrentPattern(TextPattern.Pattern, out pattern))
+                        {
+                            var tp = (TextPattern)pattern;
+                            var sb = new StringBuilder();
+
+                            foreach (var r in tp.GetSelection())
+                            {
+                                sb.AppendLine(r.GetText(-1));
+                            }
+
+                            var selectedText = sb.ToString();
+                            logger.Info("SelectedText: {0}", selectedText);
+
+                            
+                            tax.RegNum = selectedText;
+                            tax.ImportState = ImportState.Created;
+                            tax.Id = Data.Instance.InsertTax(tax);
+
+                        }
+                    }
+
+                    Thread.Sleep(2000);
+
+
                     if (DirectoryWatcher.BreakLoop)
                         break;
 
@@ -150,6 +193,8 @@ namespace NalogRobot
 
                     SendKeys.SendWait("{ENTER}");
                     logger.Info("Key ENTER sent");
+
+                    
 
                     DirectoryWatcher.IsRunning = true;
                     
@@ -195,7 +240,7 @@ namespace NalogRobot
                     DirectoryWatcher.IsRunning = false;
 
                     SendKeys.SendWait("{DOWN}");
-                    logger.Info("Key ARROW DOWN sent");
+                    logger.Info("Grid: Key ARROW DOWN sent");
 
                     DirectoryWatcher.IsRunning = true;
                     index++;
@@ -216,11 +261,18 @@ namespace NalogRobot
         public void CreateIconMenuStructure()
         {
             contextMenu1.MenuItems.Add("Запуск", Run);
+            contextMenu1.MenuItems.Add("Файлы", OpenFileForm);
             contextMenu1.MenuItems.Add("Выход", Exit);
 
             notifyIcon1.Icon = Properties.Resources.AppIcon;
             notifyIcon1.ContextMenu = contextMenu1;
             notifyIcon1.Visible = true;
+        }
+
+        private void OpenFileForm(object sender, EventArgs e)
+        {
+            FileForm fileForm = new FileForm();
+            fileForm.Show();
         }
 
         private void Exit(object sender, EventArgs e)
