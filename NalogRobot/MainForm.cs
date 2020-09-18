@@ -20,6 +20,9 @@ namespace NalogRobot
         private NotifyIcon notifyIcon1 = new NotifyIcon();
         private ContextMenu contextMenu1 = new ContextMenu();
         private Config config;
+        public string prevRegNum = String.Empty;
+        ManualResetEvent signalEvent = new ManualResetEvent(false);
+        private long SessionId;
 
         /// <summary>
         /// Application files default location 
@@ -53,10 +56,14 @@ namespace NalogRobot
 
         private void Run(object sender, EventArgs e)
         {
+            SessionId = DateTime.Now.Ticks;
+
             logger.Info("Run method called");
 
             Thread thread = new Thread(delegate()
             {
+                DirectoryWatcher.SignalEvent = signalEvent;
+
                 OptionsForm optionsForm = new OptionsForm();
                 if (optionsForm.ShowDialog() == DialogResult.OK)
                 {
@@ -99,6 +106,8 @@ namespace NalogRobot
 
                 while (DirectoryWatcher.IsRunning && index < config.Count)
                 {
+                    string regNum = String.Empty;
+
                     logger.Info("Begin loop: {0} of {2}", index, config.Count);
 
                     //if (IsProcessStopped())
@@ -106,7 +115,7 @@ namespace NalogRobot
                     //    break;
                     //}
 
-                    Tax tax = new Tax();
+                    Tax tax = new Tax(SessionId);
 
                     logger.Info("Waiting 0.5 sec");
                     Thread.Sleep(500);
@@ -151,22 +160,30 @@ namespace NalogRobot
 
                             foreach (var r in tp.GetSelection())
                             {
-                                sb.AppendLine(r.GetText(-1));
+                                sb.Append(r.GetText(-1));
                             }
 
-                            var selectedText = sb.ToString();
-                            logger.Info("SelectedText: {0}", selectedText);
+                            regNum = sb.ToString();
+                            logger.Info("RegNum: {0}", regNum);
 
                             
-                            tax.RegNum = selectedText;
+                            tax.RegNum = regNum;
                             tax.ImportState = ImportState.Created;
                             tax.Id = Data.Instance.InsertTax(tax);
-
+                            DirectoryWatcher.CurrentTax = tax;
                         }
                     }
 
                     Thread.Sleep(2000);
 
+                    if (prevRegNum == regNum)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        prevRegNum = regNum;
+                    }
 
                     if (DirectoryWatcher.BreakLoop)
                         break;
@@ -193,8 +210,6 @@ namespace NalogRobot
 
                     SendKeys.SendWait("{ENTER}");
                     logger.Info("Key ENTER sent");
-
-                    
 
                     DirectoryWatcher.IsRunning = true;
                     
@@ -230,7 +245,7 @@ namespace NalogRobot
 
                     DirectoryWatcher.IsRunning = true;
 
-                    Thread.Sleep(1500);
+                    Thread.Sleep(3000);
 
                     if (DirectoryWatcher.BreakLoop)
                     {
@@ -243,19 +258,23 @@ namespace NalogRobot
                     logger.Info("Grid: Key ARROW DOWN sent");
 
                     DirectoryWatcher.IsRunning = true;
+
+                    signalEvent.WaitOne();
+
                     index++;
                 }
 
-                logger.Info("Waiting 30 sec");
+                logger.Info("Waiting for {0} sec", DirectoryWatcher.fileMovedCount * 5000);
                 Thread.Sleep(DirectoryWatcher.fileMovedCount * 5000);
-                DirectoryWatcher.MoveFiles();
                 DirectoryWatcher.IsRunning = false;
+                DirectoryWatcher.MoveFiles();
                 string info = $"Обработано {index} циклов, обработано {DirectoryWatcher.fileMovedCount} деклараций.";
                 logger.Info(info);
                 Stat.SaveSummary(info);
                 MessageBox.Show(info);
             });
             thread.Start();
+            
         }
 
         public void CreateIconMenuStructure()

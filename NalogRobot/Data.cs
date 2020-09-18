@@ -29,7 +29,7 @@ namespace NalogRobot
             }
         }
 
-        public abstract List<Tax> GetTaxList(string term);
+        public abstract List<Tax> GetTaxList(string term, int limit);
         public abstract Tax GetTaxById(int id);
         public abstract int CountTaxs();
         public abstract int InsertTax(Tax tax);
@@ -43,7 +43,8 @@ namespace NalogRobot
                 Id = reader.GetInt32(0),
                 RegNum = reader.GetString(1),
                 ImportState = (ImportState)reader.GetInt32(4),
-                Created = reader.GetDateTime(6)
+                Created = reader.GetDateTime(6),
+                SessionId = reader.GetInt64(7)
             };
 
             if (reader[2] != DBNull.Value)

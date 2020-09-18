@@ -28,9 +28,9 @@ namespace NalogRobot
             //tax.Id = Data.Instance.InsertTax(tax);
 
             //bool res = Data.Instance.UpdateTax(tax);
-
+            int limit = 1000;
             string term = txbSearch.Text;
-            List<Tax> taxList = Data.Instance.GetTaxList(term);
+            List<Tax> taxList = Data.Instance.GetTaxList(term, limit);
             dgvTaxGrid.DataSource = taxList;
             dgvTaxGrid.Refresh();
         }

@@ -13,6 +13,8 @@ namespace NalogRobot
         public static bool IsRunning = false;
         public static bool BreakLoop = false;
         private static List<FileInfo> movedFiles = new List<FileInfo>();
+        public static ManualResetEvent SignalEvent { get; set; }
+        public static Tax CurrentTax { get; set; }
 
         public static void StartWatching(string path, string targetDir)
         {
@@ -44,11 +46,26 @@ namespace NalogRobot
                     {
                         if (!e.FullPath.Contains("$"))
                         {
-                            //File.Move(e.FullPath, targetDirectory + "\\" + e.Name);
-                            //logger.Info("File {0} is successfully moved", e.FullPath);
-
                             FileInfo fileInfo = new FileInfo(e.FullPath);
                             movedFiles.Add(fileInfo);
+
+                            //string targetPath = Path.Combine(targetDirectory, CurrentTax.RegNum + ".xslx");
+                            //string targetPath = $"{targetDirectory}\\{CurrentTax.RegNum}.xslx";
+                            string targetPath = targetDirectory + "\\" + CurrentTax.RegNum + ".xslx";
+                            logger.Info("File {0} will move to {1}", e.FullPath, targetPath);
+                            //File.Move(e.FullPath, targetDirectory + "\\" + e.Name);
+                            //File.Move(e.FullPath, targetPath);
+                            //logger.Info("File {0} is successfully moved to {1}", e.FullPath, targetPath);
+
+
+                            CurrentTax.ImportState = ImportState.Completed;
+                            CurrentTax.Updated = DateTime.Now;
+                            CurrentTax.TempFile = e.Name;
+                            CurrentTax.DestFile = targetPath;
+
+                            bool res = Data.Instance.UpdateTax(CurrentTax);
+                            logger.Info("Tax {0} updated", CurrentTax.Id);
+                            SignalEvent.Set();
                         }
                     }
                 }

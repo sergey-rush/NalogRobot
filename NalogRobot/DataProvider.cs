@@ -14,10 +14,11 @@ namespace NalogRobot
             cn.Open();
         }
 
-        public override List<Tax> GetTaxList(string term)
+        public override List<Tax> GetTaxList(string term, int limit)
         {
-            SQLiteCommand cmd = new SQLiteCommand("SELECT Id, RegNum, TempFile, DestFile, ImportState, Updated, Created FROM tax WHERE RegNum LIKE @RegNum ORDER BY Id LIMIT 1000;", cn);
+            SQLiteCommand cmd = new SQLiteCommand("SELECT Id, RegNum, TempFile, DestFile, ImportState, Updated, Created, SessionId FROM tax WHERE RegNum LIKE @RegNum ORDER BY Id LIMIT @Limit;", cn);
             cmd.Parameters.Add("@RegNum", DbType.String).Value = $"%{term}%";
+            cmd.Parameters.Add("@Limit", DbType.Int32).Value = limit;
             return GetTaxListFromReader(cmd.ExecuteReader());
         }
 
@@ -38,10 +39,11 @@ namespace NalogRobot
         /// </summary>
         public override int InsertTax(Tax tax)
         {
-            SQLiteCommand cmd = new SQLiteCommand("INSERT INTO tax (RegNum, ImportState, Created) VALUES (@RegNum, @ImportState, @Created);", cn);
+            SQLiteCommand cmd = new SQLiteCommand("INSERT INTO tax (RegNum, ImportState, Created, SessionId) VALUES (@RegNum, @ImportState, @Created, @SessionId);", cn);
             cmd.Parameters.Add("@RegNum", DbType.String).Value = tax.RegNum;
             cmd.Parameters.Add("@ImportState", DbType.Int32).Value = (int)tax.ImportState;
             cmd.Parameters.Add("@Created", DbType.String).Value = tax.Created;
+            cmd.Parameters.Add("@SessionId", DbType.UInt64).Value = tax.SessionId;
             cmd.ExecuteNonQuery();
             return (int)cn.LastInsertRowId;
         }

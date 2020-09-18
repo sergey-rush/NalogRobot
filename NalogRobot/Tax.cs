@@ -6,6 +6,12 @@ namespace NalogRobot
     {
         public Tax()
         {
+            
+        }
+
+        public Tax(long sessionId)
+        {
+            SessionId = sessionId;
             Created = DateTime.Now;
         }
 
@@ -43,5 +49,10 @@ namespace NalogRobot
         /// Record created date 
         /// </summary>
         public DateTime Created { get; set; }
+
+        /// <summary>
+        /// Unique session identity as DateTime.Ticks value
+        /// </summary>
+        public long SessionId { get; set; }
     }
 }
