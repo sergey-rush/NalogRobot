@@ -14,7 +14,6 @@ namespace NalogRobot
         [STAThread]
         static void Main()
         {
-            //long tr = DateTime.Now.AddDays(-3).Ticks;
             LogManager.Setup().SetupSerialization(s =>
                 s.RegisterObjectTransformation<System.Net.WebException>(ex => new
                 {

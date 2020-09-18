@@ -12,26 +12,28 @@ namespace NalogRobot
         private static string targetDirectory;
         public static bool IsRunning = false;
         public static bool BreakLoop = false;
-        private static List<FileInfo> movedFiles = new List<FileInfo>();
+        public static List<FileData> MovedFiles = new List<FileData>();
         public static ManualResetEvent SignalEvent { get; set; }
         public static Tax CurrentTax { get; set; }
+        public static FileSystemWatcher watcher = new FileSystemWatcher();
 
         public static void StartWatching(string path, string targetDir)
         {
             targetDirectory = targetDir;
-
-            FileSystemWatcher watcher = new FileSystemWatcher();
+            
             watcher.Path = path;
-
             watcher.NotifyFilter = NotifyFilters.LastWrite;
             watcher.Changed += new FileSystemEventHandler(OnChanged);
-            //watcher.Created += new FileSystemEventHandler(OnChanged);
-            //watcher.Renamed += new RenamedEventHandler(OnRenamed);
             watcher.EnableRaisingEvents = true;
-
         }
 
-        public static int fileMovedCount => movedFiles.Count;
+        public static void StopWatching()
+        {
+            watcher.Changed -= new FileSystemEventHandler(OnChanged);
+        }
+
+
+        public static int FileMovedCount => MovedFiles.Count;
 
         private static void OnChanged(object source, FileSystemEventArgs e)
         {
@@ -46,25 +48,22 @@ namespace NalogRobot
                     {
                         if (!e.FullPath.Contains("$"))
                         {
+                            FileData fileData = new FileData();
                             FileInfo fileInfo = new FileInfo(e.FullPath);
-                            movedFiles.Add(fileInfo);
-
-                            //string targetPath = Path.Combine(targetDirectory, CurrentTax.RegNum + ".xslx");
-                            //string targetPath = $"{targetDirectory}\\{CurrentTax.RegNum}.xslx";
-                            string targetPath = targetDirectory + "\\" + CurrentTax.RegNum + ".xslx";
-                            logger.Info("File {0} will move to {1}", e.FullPath, targetPath);
-                            //File.Move(e.FullPath, targetDirectory + "\\" + e.Name);
-                            //File.Move(e.FullPath, targetPath);
-                            //logger.Info("File {0} is successfully moved to {1}", e.FullPath, targetPath);
-
-
+                            fileData.FileInfo = fileInfo;
+                            string targetPath = targetDirectory + "\\" + CurrentTax.RegNum + ".xlsx";
+                            
                             CurrentTax.ImportState = ImportState.Completed;
                             CurrentTax.Updated = DateTime.Now;
                             CurrentTax.TempFile = e.Name;
                             CurrentTax.DestFile = targetPath;
 
+                            fileData.Tax = CurrentTax;
+
+                            MovedFiles.Add(fileData);
+
                             bool res = Data.Instance.UpdateTax(CurrentTax);
-                            logger.Info("Tax {0} updated", CurrentTax.Id);
+                            logger.Info("File {0} added to list", e.Name);
                             SignalEvent.Set();
                         }
                     }
@@ -78,16 +77,31 @@ namespace NalogRobot
 
         public static void MoveFiles()
         {
-            foreach (FileInfo fi in movedFiles)
+            foreach (FileData fd in MovedFiles)
             {
-                if (File.Exists(fi.FullName))
+                logger.Info("Moving file: Source {0} Target {1}", fd.FileInfo.FullName, fd.Tax.DestFile);
+
+                try
                 {
-                    File.Move(fi.FullName, targetDirectory + "\\" + fi.Name);
-                    logger.Info("File {0} is successfully moved", fi.FullName);
+                    if (File.Exists(fd.FileInfo.FullName))
+                    {
+                        if (File.Exists(fd.Tax.DestFile))
+                        {
+                            File.Delete(fd.Tax.DestFile);
+                        }
+
+                        File.Move(fd.FileInfo.FullName, fd.Tax.DestFile);
+                        logger.Info("File {0} is successfully moved to {1}", fd.FileInfo.FullName, fd.Tax.DestFile);
+                    }
+                    else
+                    {
+                        logger.Error("File {0} doesn't exist", fd.FileInfo.FullName);
+                    }
+
                 }
-                else
+                catch (Exception ex)
                 {
-                    logger.Info("File {0} doesn't exist", fi.FullName);
+                    logger.Error(ex, "Error occured while moving the file");
                 }
             }
         }

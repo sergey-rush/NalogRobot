@@ -72,14 +72,14 @@ namespace NalogRobot
         private void btnExport_Click(object sender, EventArgs e)
         {
             StringBuilder sb = new StringBuilder();
-            int RowCount = dgvTaxGrid.RowCount;
-            int ColumnCount = dgvTaxGrid.ColumnCount;
+            int rowCount = dgvTaxGrid.RowCount;
+            int columnCount = dgvTaxGrid.ColumnCount;
 
             // get column headers
-            for (int currentCol = 0; currentCol < ColumnCount; currentCol++)
+            for (int currentCol = 0; currentCol < columnCount; currentCol++)
             {
                 sb.Append(dgvTaxGrid.Columns[currentCol].HeaderText);
-                if (currentCol < ColumnCount - 1)
+                if (currentCol < columnCount - 1)
                 {
                     sb.Append(",");
                 }
@@ -90,17 +90,17 @@ namespace NalogRobot
             }
 
             // get the rows data
-            for (int currentRow = 0; currentRow < RowCount; currentRow++)
+            for (int currentRow = 0; currentRow < rowCount; currentRow++)
             {
                 if (!dgvTaxGrid.Rows[currentRow].IsNewRow)
                 {
-                    for (int currentCol = 0; currentCol < ColumnCount; currentCol++)
+                    for (int currentCol = 0; currentCol < columnCount; currentCol++)
                     {
                         if (dgvTaxGrid.Rows[currentRow].Cells[currentCol].Value != null)
                         {
                             sb.Append(dgvTaxGrid.Rows[currentRow].Cells[currentCol].Value.ToString());
                         }
-                        if (currentCol < ColumnCount - 1)
+                        if (currentCol < columnCount - 1)
                         {
                             sb.Append(",");
                         }
@@ -113,6 +113,7 @@ namespace NalogRobot
             }
             
             File.WriteAllText("Export_" + selectedSession.SessionId + ".csv", sb.ToString(), Encoding.Default);
+            MessageBox.Show("Сессия " + selectedSession.Name + " экспортирована", "Экспорт", MessageBoxButtons.OK);
         }
     }
 }

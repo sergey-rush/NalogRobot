@@ -67,6 +67,7 @@
     <Compile Include="DataProvider.cs" />
     <Compile Include="Enumerations.cs" />
     <Content Include="Script.sql" />
+    <Compile Include="FileData.cs" />
     <Compile Include="FileForm.cs">
       <SubType>Form</SubType>
     </Compile>

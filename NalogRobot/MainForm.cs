@@ -60,6 +60,8 @@ namespace NalogRobot
 
             logger.Info("Run method called");
 
+            DirectoryWatcher.MovedFiles.Clear();
+
             Thread thread = new Thread(delegate()
             {
                 DirectoryWatcher.SignalEvent = signalEvent;
@@ -90,7 +92,6 @@ namespace NalogRobot
                 mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_LEFTUP, config.Start.X, config.Start.Y, 0, 0);
 
                 DirectoryWatcher.IsRunning = true;
-                logger.Info("Waiting 0.5 sec");
                 Thread.Sleep(500);
                 DirectoryWatcher.IsRunning = false;
 
@@ -108,16 +109,16 @@ namespace NalogRobot
                 {
                     string regNum = String.Empty;
 
-                    logger.Info("Begin loop: {0} of {2}", index, config.Count);
+                    logger.Info("-");
+                    logger.Info("Begin loop: {0} of {1}", index, config.Count);
 
-                    //if (IsProcessStopped())
-                    //{
-                    //    break;
-                    //}
+                    if (IsProcessStopped())
+                    {
+                        break;
+                    }
 
                     Tax tax = new Tax(SessionId);
 
-                    logger.Info("Waiting 0.5 sec");
                     Thread.Sleep(500);
 
                     if (DirectoryWatcher.BreakLoop)
@@ -145,13 +146,13 @@ namespace NalogRobot
 
                     DirectoryWatcher.IsRunning = true;
 
-                    Thread.Sleep(2000);
+                    Thread.Sleep(200);
+
+                    logger.Info("App is about to read RegNum");
 
                     var element = AutomationElement.FocusedElement;
                     if (element != null)
                     {
-                        logger.Info("Element is not null");
-
                         object pattern;
                         if (element.TryGetCurrentPattern(TextPattern.Pattern, out pattern))
                         {
@@ -166,6 +167,10 @@ namespace NalogRobot
                             regNum = sb.ToString();
                             logger.Info("RegNum: {0}", regNum);
 
+                            if (string.IsNullOrEmpty(regNum))
+                            {
+                                break;
+                            }
                             
                             tax.RegNum = regNum;
                             tax.ImportState = ImportState.Created;
@@ -173,8 +178,6 @@ namespace NalogRobot
                             DirectoryWatcher.CurrentTax = tax;
                         }
                     }
-
-                    Thread.Sleep(2000);
 
                     if (prevRegNum == regNum)
                     {
@@ -186,7 +189,9 @@ namespace NalogRobot
                     }
 
                     if (DirectoryWatcher.BreakLoop)
+                    {
                         break;
+                    }
 
                     DirectoryWatcher.IsRunning = false;
 
@@ -264,11 +269,12 @@ namespace NalogRobot
                     index++;
                 }
 
-                logger.Info("Waiting for {0} sec", DirectoryWatcher.fileMovedCount * 5000);
-                Thread.Sleep(DirectoryWatcher.fileMovedCount * 5000);
+                logger.Info("Waiting for {0} sec", DirectoryWatcher.FileMovedCount);
+                Thread.Sleep(DirectoryWatcher.FileMovedCount * 5000);
                 DirectoryWatcher.IsRunning = false;
+                DirectoryWatcher.StopWatching();
                 DirectoryWatcher.MoveFiles();
-                string info = $"Обработано {index} циклов, обработано {DirectoryWatcher.fileMovedCount} деклараций.";
+                string info = $"Обработано {index} циклов, обработано {DirectoryWatcher.FileMovedCount} деклараций.";
                 logger.Info(info);
                 Stat.SaveSummary(info);
                 MessageBox.Show(info);
@@ -301,15 +307,15 @@ namespace NalogRobot
 
         public static bool IsProcessStopped()
         {
-            Process[] pname = Process.GetProcessesByName("CSC.Hosting.UcHost");
+            Process[] pname = Process.GetProcessesByName("CommonComponents.UnifiedClient");
             if (pname.Length == 0)
             {
-                logger.Info("CSC.Hosting.UcHost does not exist");
+                logger.Info("CSC.Hosting.UcHost CommonComponents.UnifiedClient does not exist");
                 return true;
             }
             else
             {
-                logger.Info("CSC.Hosting.UcHost is running");
+                logger.Info("CSC.Hosting.UcHost CommonComponents.UnifiedClient is running");
                 return false;
             }
         }
