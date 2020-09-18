@@ -29,11 +29,13 @@ namespace NalogRobot
             }
         }
 
-        public abstract List<Tax> GetTaxList(string term, int limit);
+        public abstract List<Tax> GetTaxList(string term, int limit, long sessionId);
         public abstract Tax GetTaxById(int id);
         public abstract int CountTaxs();
         public abstract int InsertTax(Tax tax);
         public abstract bool UpdateTax(Tax tax);
+        public abstract List<Session> GetSessions();
+        public abstract int DeleteTaxListBySessionId(long sessionId);
 
         // RegNum, TempFile, DestFile, ImportState, Updated, Created
         protected virtual Tax GetTaxFromReader(IDataReader reader)

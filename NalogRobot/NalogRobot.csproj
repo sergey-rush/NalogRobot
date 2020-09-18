@@ -73,6 +73,7 @@
     <Compile Include="FileForm.Designer.cs">
       <DependentUpon>FileForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Session.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="DirectoryWatcher.cs" />
     <Compile Include="Stat.cs" />

@@ -14,10 +14,11 @@ namespace NalogRobot
             cn.Open();
         }
 
-        public override List<Tax> GetTaxList(string term, int limit)
+        public override List<Tax> GetTaxList(string term, int limit, long sessionId)
         {
-            SQLiteCommand cmd = new SQLiteCommand("SELECT Id, RegNum, TempFile, DestFile, ImportState, Updated, Created, SessionId FROM tax WHERE RegNum LIKE @RegNum ORDER BY Id LIMIT @Limit;", cn);
+            SQLiteCommand cmd = new SQLiteCommand("SELECT Id, RegNum, TempFile, DestFile, ImportState, Updated, Created, SessionId FROM tax WHERE SessionId = @SessionId AND RegNum LIKE @RegNum ORDER BY Id LIMIT @Limit;", cn);
             cmd.Parameters.Add("@RegNum", DbType.String).Value = $"%{term}%";
+            cmd.Parameters.Add("@SessionId", DbType.UInt64).Value = sessionId;
             cmd.Parameters.Add("@Limit", DbType.Int32).Value = limit;
             return GetTaxListFromReader(cmd.ExecuteReader());
         }
@@ -34,9 +35,6 @@ namespace NalogRobot
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        /// <summary>
-        /// Inserts a new Tax
-        /// </summary>
         public override int InsertTax(Tax tax)
         {
             SQLiteCommand cmd = new SQLiteCommand("INSERT INTO tax (RegNum, ImportState, Created, SessionId) VALUES (@RegNum, @ImportState, @Created, @SessionId);", cn);
@@ -58,6 +56,30 @@ namespace NalogRobot
             cmd.Parameters.Add("@Updated", DbType.String).Value = tax.Updated;
             var retVal = cmd.ExecuteNonQuery();
             return retVal == 1;
+        }
+
+        public override int DeleteTaxListBySessionId(long sessionId)
+        {
+            SQLiteCommand cmd = new SQLiteCommand("DELETE FROM tax WHERE SessionId = @SessionId;", cn);
+            
+            cmd.Parameters.Add("@SessionId", DbType.UInt64).Value = sessionId;
+            cmd.ExecuteNonQuery();
+            return cmd.ExecuteNonQuery();
+        }
+
+        public override List<Session> GetSessions()
+        {
+            List<Session> sessions = new List<Session>();
+            SQLiteCommand cmd = new SQLiteCommand("SELECT DISTINCT SessionId FROM tax;", cn);
+            var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                Session session = new Session();
+                session.SessionId = reader.GetInt64(0);
+                session.Name = new DateTime(session.SessionId).ToString("F");
+                sessions.Add(session);
+            }
+            return sessions;
         }
     }
 }
