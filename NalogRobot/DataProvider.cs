@@ -27,7 +27,7 @@ namespace NalogRobot
         {
             SQLiteCommand cmd = new SQLiteCommand("SELECT Id, FileName, Created FROM Tax ORDER BY Created DESC LIMIT 100;", cn);
             return GetTaxFromReader(cmd.ExecuteReader());
-        }
+        }        
 
         public override int CountTaxs()
         {
@@ -48,7 +48,7 @@ namespace NalogRobot
 
         public override bool UpdateTax(Tax tax)
         {
-            SQLiteCommand cmd = new SQLiteCommand("UPDATE Tax SET TempFile = @TempFile, DestFile = @DestFile, ImportState = @ImportState, Updated = @Updated WHERE Id = @Id;", cn);
+            SQLiteCommand cmd = new SQLiteCommand("UPDATE tax SET TempFile = @TempFile, DestFile = @DestFile, ImportState = @ImportState, Updated = @Updated WHERE Id = @Id;", cn);
             cmd.Parameters.Add("@Id", DbType.Int32).Value = tax.Id;
             cmd.Parameters.Add("@TempFile", DbType.String).Value = tax.TempFile;
             cmd.Parameters.Add("@DestFile", DbType.String).Value = tax.DestFile;
@@ -58,12 +58,30 @@ namespace NalogRobot
             return retVal == 1;
         }
 
+        public override void FinalizeSync(bool removeEmptyRecords)
+        {
+            if (removeEmptyRecords)
+            {
+                SQLiteCommand dcmd = new SQLiteCommand("DELETE FROM tax WHERE DestFile IS NULL;", cn);                
+                dcmd.ExecuteNonQuery();
+            }
+
+            SQLiteCommand cmd = new SQLiteCommand("UPDATE tax SET SessionId = @SessionId;", cn);
+            cmd.Parameters.Add("@SessionId", DbType.UInt64).Value = DateTime.Now.Ticks;
+            cmd.ExecuteNonQuery();
+        }
+
+        public override int DeleteTaxByDestFile(string destFile)
+        {
+            SQLiteCommand cmd = new SQLiteCommand("DELETE FROM tax WHERE DestFile = @DestFile;", cn);
+            cmd.Parameters.Add("@DestFile", DbType.String).Value = destFile;            
+            return cmd.ExecuteNonQuery();
+        }
+
         public override int DeleteTaxListBySessionId(long sessionId)
         {
-            SQLiteCommand cmd = new SQLiteCommand("DELETE FROM tax WHERE SessionId = @SessionId;", cn);
-            
-            cmd.Parameters.Add("@SessionId", DbType.UInt64).Value = sessionId;
-            cmd.ExecuteNonQuery();
+            SQLiteCommand cmd = new SQLiteCommand("DELETE FROM tax WHERE SessionId = @SessionId;", cn);            
+            cmd.Parameters.Add("@SessionId", DbType.UInt64).Value = sessionId;            
             return cmd.ExecuteNonQuery();
         }
 
@@ -77,6 +95,21 @@ namespace NalogRobot
                 Session session = new Session();
                 session.SessionId = reader.GetInt64(0);
                 session.Name = new DateTime(session.SessionId).ToString("F");
+                sessions.Add(session);
+            }
+            return sessions;
+        }
+
+        public override List<Session> GroupByDestFile()
+        {
+            List<Session> sessions = new List<Session>();
+            SQLiteCommand cmd = new SQLiteCommand("SELECT DestFile, COUNT(*) AS Total FROM tax WHERE DestFile IS NOT NULL GROUP BY DestFile ORDER BY Total DESC;", cn);
+            var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                Session session = new Session();
+                session.Name = reader.GetString(0);
+                session.SessionId = reader.GetInt64(1);
                 sessions.Add(session);
             }
             return sessions;

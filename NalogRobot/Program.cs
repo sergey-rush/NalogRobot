@@ -27,9 +27,11 @@ namespace NalogRobot
                 })
             );
 
+
             logger.Info("Application started");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            Settings.LoadConfig();
             Application.Run(new MainForm());
         }
     }

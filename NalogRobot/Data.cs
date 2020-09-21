@@ -36,6 +36,9 @@ namespace NalogRobot
         public abstract bool UpdateTax(Tax tax);
         public abstract List<Session> GetSessions();
         public abstract int DeleteTaxListBySessionId(long sessionId);
+        public abstract List<Session> GroupByDestFile();
+        public abstract int DeleteTaxByDestFile(string destFile);
+        public abstract void FinalizeSync(bool removeEmptyRecords);
 
         // RegNum, TempFile, DestFile, ImportState, Updated, Created
         protected virtual Tax GetTaxFromReader(IDataReader reader)

@@ -40,7 +40,7 @@ namespace NalogRobot
             Bind();
         }
 
-        private void Bind()
+        public void Bind()
         {
             cmbSessions.DisplayMember = "Name";
             cmbSessions.ValueMember = "SessionId";
@@ -114,6 +114,25 @@ namespace NalogRobot
             
             File.WriteAllText("Export_" + selectedSession.SessionId + ".csv", sb.ToString(), Encoding.Default);
             MessageBox.Show("Сессия " + selectedSession.Name + " экспортирована", "Экспорт", MessageBoxButtons.OK);
+        }
+
+        private void btnSync_Click(object sender, EventArgs e)
+        {
+            SyncForm syncForm = new SyncForm(this);
+            syncForm.Show();
+
+            //StringBuilder sb = new StringBuilder();
+            //sb.AppendLine("Будет произведена синхронизация файлов в каталоге и базе данных");
+            //sb.AppendLine("Отсутствующие файлы в каталоге будут удалены из базы данных.");
+            //sb.AppendLine("Отметьте "Удалить файлы", чтобы удалить из каталога файлы незарегистрированные в базе данных.");
+            //sb.AppendLine("Операция может занять некоторое время. Продолжить?");
+
+            //var confirmResult = MessageBox.Show(sb.ToString(), "Синхронизация", MessageBoxButtons.YesNo);
+            //if (confirmResult == DialogResult.Yes)
+            //{
+            //    //Data.Instance.DeleteTaxListBySessionId(selectedSession.SessionId);
+            //    //Bind();
+            //}
         }
     }
 }

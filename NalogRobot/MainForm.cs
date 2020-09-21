@@ -51,7 +51,7 @@ namespace NalogRobot
             InitHook();
             InitializeComponent();
             CreateIconMenuStructure();
-            Settings.LoadConfig();
+            
         }
 
         private void Run(object sender, EventArgs e)

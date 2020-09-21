@@ -10,7 +10,7 @@ namespace NalogRobot
     public class Settings
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
-
+        public static string TargetDir { get; private set; }
         private static readonly Dictionary<int, Config> Configs = new Dictionary<int, Config>();
 
         public static void LoadConfig()
@@ -80,7 +80,7 @@ namespace NalogRobot
                 config2.Close.Y = (int)(((double)y / resolution.Height) * 65536);
 
                 config2.Count = config1.Count;
-                config2.TargetDir = config1.TargetDir;
+                TargetDir = config2.TargetDir = config1.TargetDir;
                 Configs.Add(1, config2);
 
             }
