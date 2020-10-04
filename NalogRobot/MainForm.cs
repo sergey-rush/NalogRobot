@@ -171,6 +171,14 @@ namespace NalogRobot
                             {
                                 break;
                             }
+
+                            //TODO: remove duplicate import
+                            //int taxCount = Data.Instance.CountByRegNum(regNum, ImportState.Completed);
+                            //if (taxCount > 0)
+                            //{
+                            //    logger.Info("Document with RegNum: {0} already loaded", regNum);
+                            //    continue;
+                            //}
                             
                             tax.RegNum = regNum;
                             tax.ImportState = ImportState.Created;

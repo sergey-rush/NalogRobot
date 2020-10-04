@@ -38,6 +38,9 @@ namespace NalogRobot
         private void FileForm_Load(object sender, EventArgs e)
         {
             Bind();
+            //string regNum = "1003605968";
+            //Tax tax = Data.Instance.GetTaxByRegNum(regNum);
+            //int taxCount = Data.Instance.CountByRegNum(regNum, ImportState.Created);
         }
 
         public void Bind()
@@ -46,10 +49,25 @@ namespace NalogRobot
             cmbSessions.ValueMember = "SessionId";
             sessions = Data.Instance.GetSessions();
             cmbSessions.DataSource = sessions;
-            cmbSessions.SelectedIndex = 0;
-
-            selectedSession = sessions[0];
-            DoSearch();
+            if (sessions.Count > 0)
+            {
+                cmbSessions.Enabled = true;
+                btnDelete.Enabled = true;
+                btnSync.Enabled = true;
+                btnExport.Enabled = true;
+                cmbSessions.SelectedIndex = 0;
+                selectedSession = sessions[0];
+                DoSearch();
+            }
+            else
+            {
+                cmbSessions.Enabled = false;
+                btnDelete.Enabled = false;
+                btnSync.Enabled = false;
+                btnExport.Enabled = false;
+                dgvTaxGrid.DataSource = null;
+                dgvTaxGrid.Refresh();
+            }
         }
 
         private void btnDelete_Click(object sender, EventArgs e)

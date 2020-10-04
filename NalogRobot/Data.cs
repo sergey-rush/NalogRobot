@@ -31,7 +31,7 @@ namespace NalogRobot
 
         public abstract List<Tax> GetTaxList(string term, int limit, long sessionId);
         public abstract Tax GetTaxById(int id);
-        public abstract int CountTaxs();
+        public abstract int CountByRegNum(string regNum, ImportState importState);
         public abstract int InsertTax(Tax tax);
         public abstract bool UpdateTax(Tax tax);
         public abstract List<Session> GetSessions();
@@ -39,6 +39,7 @@ namespace NalogRobot
         public abstract List<Session> GroupByDestFile();
         public abstract int DeleteTaxByDestFile(string destFile);
         public abstract void FinalizeSync(bool removeEmptyRecords);
+        public abstract Tax GetTaxByRegNum(string regNum);
 
         // RegNum, TempFile, DestFile, ImportState, Updated, Created
         protected virtual Tax GetTaxFromReader(IDataReader reader)

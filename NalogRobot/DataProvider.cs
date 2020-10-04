@@ -27,11 +27,27 @@ namespace NalogRobot
         {
             SQLiteCommand cmd = new SQLiteCommand("SELECT Id, FileName, Created FROM Tax ORDER BY Created DESC LIMIT 100;", cn);
             return GetTaxFromReader(cmd.ExecuteReader());
-        }        
+        }
 
-        public override int CountTaxs()
+        public override Tax GetTaxByRegNum(string regNum)
         {
-            SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Tax;", cn);
+            SQLiteCommand cmd = new SQLiteCommand("SELECT Id, RegNum, TempFile, DestFile, ImportState, Updated, Created, SessionId FROM tax WHERE RegNum = @RegNum LIMIT 1;", cn);
+            cmd.Parameters.Add("@RegNum", DbType.String).Value = regNum;
+
+            var reader = cmd.ExecuteReader(CommandBehavior.SingleResult);
+            if (reader.Read())
+            {
+                return GetTaxFromReader(reader);
+            }
+
+            return null;
+        }
+
+        public override int CountByRegNum(string regNum, ImportState importState)
+        {
+            SQLiteCommand cmd = new SQLiteCommand("SELECT COUNT(*) FROM Tax WHERE RegNum = @RegNum AND ImportState = @ImportState;", cn);
+            cmd.Parameters.Add("@RegNum", DbType.String).Value = regNum;
+            cmd.Parameters.Add("@ImportState", DbType.Int32).Value = (int)importState;
             return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
